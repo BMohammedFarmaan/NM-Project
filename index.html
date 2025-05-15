@@ -2,305 +2,341 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Smart Grid Energy Consumption Forecast</title>
 <style>
-  /* Reset and base */
-  * {
-    box-sizing: border-box;
-  }
+  @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
   body {
-    margin: 0; padding: 0;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #101822;
+    margin: 0;
+    font-family: 'Montserrat', sans-serif;
+    background: #121212;
     color: #f0f0f0;
     display: flex;
     flex-direction: column;
     align-items: center;
     min-height: 100vh;
-    max-width: 350px;
-    margin: 0 auto;
-    padding: 16px;
   }
-
   header {
+    padding: 1rem 2rem;
     text-align: center;
-    margin-bottom: 12px;
+    background: linear-gradient(45deg, #0077ff, #00c6ff);
+    width: 100%;
+    box-shadow: 0 3px 15px rgba(0,0,0,0.3);
   }
   header h1 {
+    margin: 0;
     font-weight: 700;
-    font-size: 1.6rem;
-    margin-bottom: 4px;
-    color: #00e5ff;
+    font-size: 2rem;
     letter-spacing: 0.05em;
   }
-  header p {
-    font-size: 0.9rem;
-    color: #a4c8d8;
-  }
-
-  #chart-container {
-    position: relative;
+  main {
+    max-width: 900px;
+    margin: 2rem;
+    flex-grow: 1;
     width: 100%;
-    height: 320px;
-    background: #16212b;
-    border-radius: 12px;
-    box-shadow: 0 0 12px #00e5ff55;
-    margin-bottom: 12px;
   }
-
-  #controls {
+  .controls {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+  .control-group {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    margin-bottom: 20px;
+    align-items: flex-start;
   }
-
   label {
     font-weight: 600;
+    margin-bottom: 0.3rem;
     font-size: 0.9rem;
-    margin-bottom: 3px;
   }
-
-  input[type=number], button {
-    width: 100%;
-    padding: 10px 14px;
-    font-size: 1rem;
-    border-radius: 8px;
-    border: none;
+  input[type=number], input[type=range] {
+    appearance: none;
+    width: 150px;
+    height: 10px;
+    border-radius: 5px;
+    background: #222;
     outline: none;
-    transition: background-color 0.3s ease;
-  }
-  input[type=number] {
-    background: #223344;
-    color: #f0f0f0;
-  }
-  input[type=number]::placeholder {
-    color: #668899;
-  }
-
-  button {
-    background: #00e5ff;
-    color: #101822;
-    font-weight: 700;
     cursor: pointer;
-    box-shadow: 0 4px 10px #00e5ffaa;
   }
-  button:hover {
-    background: #00b8cc;
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #00c6ff;
+    cursor: pointer;
+    border: none;
   }
-
-  #info {
-    font-size: 0.9rem;
-    color: #66d9ffcc;
+  input[type=range]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #00c6ff;
+    cursor: pointer;
+    border: none;
+  }
+  .button-refresh {
+    cursor: pointer;
+    margin-top: 24px;
+    padding: 0.6rem 1.5rem;
+    font-weight: 700;
+    border: none;
+    border-radius: 30px;
+    background: #00c6ff;
+    color: #121212;
+    box-shadow: 0 6px 12px rgba(0,198,255,0.7);
+    transition: background 0.3s ease;
+  }
+  .button-refresh:hover {
+    background: #0077ff;
+    box-shadow: 0 8px 20px rgba(0,119,255,0.9);
+  }
+  canvas {
+    background: #1e1e1e;
+    border-radius: 12px;
+    box-shadow: 0 6px 24px rgba(0,198,255,0.3);
+  }
+  footer {
     text-align: center;
+    font-size: 0.85rem;
+    padding: 1rem;
+    color: #666;
+    width: 100%;
   }
-
-  /* Scroll fix for mobile */
-  html, body {
-    overscroll-behavior-y: contain;
+  footer a {
+    color: #00c6ff;
+    text-decoration: none;
+    font-weight: 600;
   }
-
+  footer a:hover {
+    text-decoration: underline;
+  }
+  @media (max-width: 480px) {
+    .controls {
+      flex-direction: column;
+      align-items: center;
+    }
+    .control-group {
+      width: 100%;
+      max-width: 200px;
+      align-items: center;
+    }
+    input[type=number], input[type=range] {
+      width: 100%;
+    }
+  }
 </style>
 </head>
 <body>
 <header>
-  <h1>Smart Grid Energy Forecast</h1>
-  <p>Predicting Energy Consumption Patterns Using Time Series Forecasting</p>
+  <h1>Smart Grid Energy Consumption Forecast</h1>
 </header>
+<main>
+  <section class="controls" aria-label="Forecast controls">
+    <div class="control-group">
+      <label for="forecastDays">Forecast Horizon (days)</label>
+      <input type="number" id="forecastDays" min="1" max="30" step="1" value="7" />
+    </div>
+    <div class="control-group">
+      <label for="smoothingAlpha">Smoothing α (Alpha)</label>
+      <input type="range" id="smoothingAlpha" min="0.01" max="1" step="0.01" value="0.3" />
+    </div>
+    <button class="button-refresh" id="btnForecast">Update Forecast</button>
+  </section>
+  <section>
+    <canvas id="energyChart" aria-label="Energy consumption line chart" role="img"></canvas>
+  </section>
+</main>
+<footer>
+  &copy; 2024 Smart Grid Forecast &mdash; Developed by BLACKBOXAI
+</footer>
 
-<div id="chart-container">
-  <canvas id="energyChart" width="350" height="320"></canvas>
-</div>
-
-<div id="controls">
-  <label for="dataPoints">Enter Number of Past Days (5-30):</label>
-  <input type="number" id="dataPoints" min="5" max="30" value="20" />
-  <button id="generateBtn">Generate & Forecast</button>
-</div>
-
-<div id="info">
-  Forecast uses Simple Exponential Smoothing<br>
-  Forecast horizon: 7 days ahead
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
 <script>
-(() => {
-  // Selectors
-  const ctx = document.getElementById('energyChart').getContext('2d');
-  const generateBtn = document.getElementById('generateBtn');
-  const dataPointsInput = document.getElementById('dataPoints');
+  (() => {
+    const forecastDaysInput = document.getElementById('forecastDays');
+    const smoothingAlphaInput = document.getElementById('smoothingAlpha');
+    const btnForecast = document.getElementById('btnForecast');
+    const ctx = document.getElementById('energyChart').getContext('2d');
 
-  // Forecast settings
-  const forecastDays = 7;
-  const smoothingAlpha = 0.3; // smoothing factor for exponential smoothing
-
-  // Generate example energy consumption data with some patterns and noise
-  // data points: energy consumed per day in kWh
-  function generateEnergyData(n) {
-    const data = [];
-    for (let i = 0; i < n; i++) {
-      // simulate base consumption with a pattern + random noise
-      // pattern: weekly cycle with 5 weekdays high, 2 weekend days lower
-      let weekday = (i % 7 < 5);
-      let base = weekday ? 120 : 85;
-      // trend: slight increase over time
-      base += i * 0.8;
-      // random noise +/-10%
-      let noise = base * (Math.random() * 0.2 - 0.1);
-      let value = Math.max(10, base + noise);
-      data.push(Math.round(value * 10) / 10);
-    }
-    return data;
-  }
-
-  // Simple Exponential Smoothing forecast
-  // Returns forecast array of length forecastHorizon
-  // https://en.wikipedia.org/wiki/Exponential_smoothing
-  function simpleExponentialSmoothing(series, alpha, horizon) {
-    if (!series.length) return [];
-
-    // Initialize smoothed value with first observation
-    let s = series[0];
-    for (let t = 1; t < series.length; t++) {
-      s = alpha * series[t] + (1 - alpha) * s;
-    }
-    // Forecast is the last smoothed value repeated for horizon
-    const forecast = Array(horizon).fill(Math.round(s * 10) / 10);
-    return forecast;
-  }
-
-  // Format labels for days ago up to future dates
-  function formatLabels(n, horizon) {
-    const labels = [];
-    for (let i = n - 1; i >= 0; i--) {
-      labels.push(`Day -${i}`);
-    }
-    for (let i = 1; i <= horizon; i++) {
-      labels.push(`Day +${i}`);
-    }
-    return labels;
-  }
-
-  // Chart instance variable
-  let energyChart;
-
-  function renderChart(pastData, forecastData) {
-    const totalData = pastData.concat(forecastData);
-    const labels = formatLabels(pastData.length, forecastData.length);
-
-    const pastDataLength = pastData.length;
-
-    const datasets = [
-      {
-        label: 'Historical Consumption (kWh)',
-        data: pastData,
-        borderColor: '#00e5ff',
-        backgroundColor: '#00e5ff55',
-        fill: true,
-        tension: 0.3,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-        borderWidth: 2,
-      },
-      {
-        label: 'Forecasted Consumption (kWh)',
-        data: Array(pastDataLength).fill(null).concat(forecastData),
-        borderColor: '#ffdd59',
-        backgroundColor: '#ffdd5955',
-        fill: true,
-        borderDash: [10,6],
-        tension: 0.3,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-        borderWidth: 2,
+    // Generate mock historical energy consumption data (daily for 60 days)
+    // with some seasonality and noise.
+    function generateHistoricalData(days) {
+      const data = [];
+      const baseDate = new Date();
+      baseDate.setHours(0,0,0,0);
+      baseDate.setDate(baseDate.getDate() - days);
+      for (let i = 0; i < days; i++) {
+        // Simulate daily pattern + weekly seasonality + random noise
+        const date = new Date(baseDate);
+        date.setDate(date.getDate() + i);
+        const dayOfWeek = date.getDay(); // 0-6 Sun-Sat
+        // Base consumption varies by day of week (weekend lower)
+        let baseConsumption = 50 + 10 * Math.sin(i/7 * 2*Math.PI);
+        baseConsumption += (dayOfWeek === 0 || dayOfWeek === 6) ? -10 : 0;
+        // random noise
+        const noise = (Math.random() - 0.5) * 5;
+        const consumption = Math.max(5, baseConsumption + noise);
+        data.push({ date: date.toISOString().slice(0,10), consumption });
       }
-    ];
+      return data;
+    }
 
-    if (energyChart) {
-      energyChart.data.labels = labels;
-      energyChart.data.datasets = datasets;
-      energyChart.update();
-    } else {
-      energyChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: labels,
-          datasets: datasets
+    // Simple Exponential Smoothing Forecast
+    // history: array of numbers
+    // alpha: smoothing factor 0-1
+    // n: forecast length
+    function exponentialSmoothingForecast(history, alpha, n) {
+      let level = history[0];
+      for (let i = 1; i < history.length; i++) {
+        level = alpha * history[i] + (1 - alpha) * level;
+      }
+      // forecast n points ahead, simple approach repeats level
+      return Array(n).fill(level);
+    }
+
+    // Format date as MMM dd
+    function formatDate(dateStr) {
+      const d = new Date(dateStr);
+      return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    }
+
+    // Main function to draw chart
+    let chart = null;
+    function drawChart(historical, forecasted, forecastDays) {
+      const labels = [];
+      const historicalData = [];
+      const forecastData = [];
+      for(let i=0; i < historical.length; i++) {
+        labels.push(formatDate(historical[i].date));
+        historicalData.push(historical[i].consumption);
+        forecastData.push(null);
+      }
+      const lastDate = new Date(historical[historical.length-1].date);
+      for(let i=0; i < forecastDays; i++) {
+        lastDate.setDate(lastDate.getDate() + 1);
+        labels.push(formatDate(lastDate.toISOString().slice(0,10)));
+        forecastData.push(forecasted[i]);
+        historicalData.push(null);
+      }
+
+      const data = {
+        labels,
+        datasets: [
+          {
+            label: 'Historical Consumption',
+            data: historicalData,
+            borderColor: 'rgba(0,198,255,0.9)',
+            backgroundColor: 'rgba(0,198,255,0.2)',
+            borderWidth: 2,
+            fill: true,
+            spanGaps: true,
+            tension: 0.3,
+            pointRadius: 3,
+            pointHoverRadius: 6,
+          },
+          {
+            label: 'Forecasted Consumption',
+            data: forecastData,
+            borderColor: 'rgba(255,165,0,0.9)',
+            backgroundColor: 'rgba(255,165,0,0.2)',
+            borderWidth: 2,
+            borderDash: [10,5],
+            fill: true,
+            tension: 0.3,
+            pointRadius: 3,
+            pointHoverRadius: 6,
+          }
+        ]
+      };
+
+      const options = {
+        responsive: true,
+        interaction: {
+          mode: 'nearest',
+          axis: 'x',
+          intersect: false
         },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          interaction: {
-            mode: 'nearest',
-            intersect: false
+        plugins: {
+          legend: {
+            labels: { color: '#f0f0f0', font: { weight: '700', size: 14 } }
           },
-          plugins: {
-            legend: {
-              labels: {
-                color: '#cceeff',
-                font: {weight:'bold', size:14}
-              }
-            },
-            tooltip: {
-              enabled: true,
-              backgroundColor: '#222',
-              titleColor: '#00e5ff',
-              bodyColor: '#eee',
-              cornerRadius: 6,
-              padding: 10,
-              mode: 'index',
-              intersect: false
-            }
+          tooltip: {
+            mode: 'index',
+            intersect: false,
+            backgroundColor: '#222',
+            titleFont: { weight: '700', size: 14 },
+            bodyFont: { size: 13 },
+            padding: 8,
+            caretSize: 6,
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: '#333' },
+            ticks: { color: '#ccc' }
           },
-          scales: {
-            x: {
-              ticks: { color: '#88c0d0', maxRotation: 0, minRotation: 0, maxTicksLimit: 10 },
-              grid: { color: '#203040' },
-              title: {
-                display: true,
-                text: 'Days',
-                color: '#a8def0',
-                font: { size: 14, weight: 'bold' }
-              }
-            },
-            y: {
-              ticks: { color: '#88c0d0' },
-              grid: { color: '#203040' },
-              title: {
-                display: true,
-                text: 'Energy Consumption (kWh)',
-                color: '#a8def0',
-                font: { size: 14, weight: 'bold' }
-              },
-              beginAtZero: true
+          y: {
+            beginAtZero: true,
+            grid: { color: '#333' },
+            ticks: { color: '#ccc' },
+            title: {
+              display: true,
+              text: 'Energy Consumption (kWh)',
+              color: '#ddd',
+              font: { weight: '700', size: 14 }
             }
           }
         }
-      });
+      };
+
+      if(chart) {
+        chart.data = data;
+        chart.options = options;
+        chart.update();
+      } else {
+        chart = new Chart(ctx, {
+          type: 'line',
+          data,
+          options
+        });
+      }
     }
-  }
 
-  // Run initial chart
-  function initialRender() {
-    const n = parseInt(dataPointsInput.value) || 20;
-    const cleanN = Math.min(Math.max(n, 5), 30);
-    dataPointsInput.value = cleanN;
-    const pastData = generateEnergyData(cleanN);
-    const forecastData = simpleExponentialSmoothing(pastData, smoothingAlpha, forecastDays);
-    renderChart(pastData, forecastData);
-  }
+    // Initialization
+    const historicalDataDays = 60;
+    const historicalData = generateHistoricalData(historicalDataDays);
 
-  generateBtn.addEventListener('click', () => {
-    initialRender();
-  });
+    function updateForecast() {
+      const forecastDays = parseInt(forecastDaysInput.value, 10);
+      let alpha = parseFloat(smoothingAlphaInput.value);
+      if (isNaN(forecastDays) || forecastDays < 1 || forecastDays > 30) {
+        alert('Forecast Horizon must be between 1 and 30 days.');
+        return;
+      }
+      if (isNaN(alpha) || alpha <= 0 || alpha > 1) {
+        alert('Smoothing Alpha must be between 0.01 and 1.');
+        return;
+      }
+      const history = historicalData.map(d => d.consumption);
+      const forecast = exponentialSmoothingForecast(history, alpha, forecastDays);
+      drawChart(historicalData, forecast, forecastDays);
+    }
 
-  // Initial load
-  initialRender();
-})();
+    btnForecast.addEventListener('click', () => {
+      updateForecast();
+    });
+
+    // Run initial forecast and chart draw
+    updateForecast();
+
+  })();
 </script>
 </body>
 </html>
-</content>
-</create_file>
+
+
